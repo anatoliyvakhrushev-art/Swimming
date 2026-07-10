@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Дневник тренировок · 50 в/ст</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#10242e;
+  --ink-2:#16323f;
+  --paper:#f6f3ec;
+  --paper-dim:#eae6da;
+  --lane:#2f7d6b;
+  --lane-dim:#7fada0;
+  --signal:#e07a4f;
+  --signal-dim:#f0b79a;
+  --muted:#8a97a0;
+  --success:#4f8f6d;
+  --danger:#c96a54;
+  --border:rgba(16,36,46,0.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink);
+  color:var(--paper);
+  font-family:'IBM Plex Sans',sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:640px;margin:0 auto;padding:20px 18px 60px}
+
+#authScreen{
+  position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:100;
+}
+#authScreen .authCard{
+  background:var(--paper);color:var(--ink);border-radius:16px;padding:40px 24px;max-width:320px;text-align:center;
+}
+#authScreen h2{margin:0 0 12px;font-family:'Oswald',sans-serif;font-size:24px}
+#authScreen p{font-size:14px;color:#4a5a60;margin:0 0 24px;line-height:1.5}
+#authScreen .btn{
+  width:100%;padding:14px;background:var(--signal);color:#fff;border:none;border-radius:10px;
+  font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;text-transform:uppercase;cursor:pointer;
+}
+#authScreen .btn:hover{opacity:.9}
+#authScreen .status{font-size:12px;color:var(--muted);margin-top:12px}
+
+.topbar{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.brand{font-family:'Oswald',sans-serif;font-weight:600;font-size:13px;letter-spacing:0.14em;text-transform:uppercase;color:var(--signal-dim)}
+.brand b{color:var(--signal)}
+.datepick{display:flex;align-items:center;gap:8px;font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--signal-dim);font-weight:600}
+.datepick button{
+  background:var(--signal);border:1px solid var(--signal);color:#fff;
+  width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:18px;line-height:1;
+  display:flex;align-items:center;justify-content:center;
+}
+.datepick button:hover{background:var(--signal-dim);border-color:var(--signal-dim);color:var(--ink)}
+.todaybtn{
+  background:none;border:none;color:var(--signal-dim);font-family:'IBM Plex Mono',monospace;
+  font-size:11px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;text-decoration:underline;
+  padding:4px 0;margin-left:2px;
+}
+
+.lanebar{position:relative;height:34px;margin:18px 0 22px;background:var(--ink-2);border-radius:8px;overflow:hidden;border:1px solid rgba(246,243,234,0.08)}
+.lanebar .segs{position:absolute;inset:0;display:flex}
+.lanebar .seg{flex:1;border-right:1px dashed rgba(246,243,234,0.12)}
+.lanebar .seg:last-child{border-right:none}
+.lanebar .fill{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(90deg,var(--lane),var(--lane-dim));transition:width .3s}
+.lanebar .marker{position:absolute;top:0;bottom:0;width:2px;background:var(--signal);}
+.lanebar .marker::after{
+  content:attr(data-day);position:absolute;top:-18px;left:50%;transform:translateX(-50%);
+  font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--signal);white-space:nowrap;
+}
+
+.headline{margin-bottom:22px}
+.headline .date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.headline h1{font-family:'Oswald',sans-serif;font-weight:600;font-size:30px;margin:0;line-height:1.1}
+.badge{display:inline-block;margin-top:10px;padding:4px 11px;border-radius:20px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;}
+.badge.aero{background:rgba(47,125,107,0.25);color:#8fd6c1}
+.badge.strength{background:rgba(224,122,79,0.22);color:var(--signal-dim)}
+.badge.pace{background:rgba(139,159,236,0.2);color:#aebdf5}
+.badge.anaerobic{background:rgba(201,106,84,0.25);color:#f0a48f}
+.badge.test{background:rgba(224,122,79,0.35);color:#ffd9c4}
+.badge.rest{background:rgba(138,151,160,0.2);color:var(--muted)}
+
+.card{background:var(--paper);color:var(--ink);border-radius:12px;padding:18px 18px 16px;margin-bottom:14px;}
+.card h3{font-family:'Oswald',sans-serif;font-weight:500;font-size:14px;text-transform:uppercase;letter-spacing:.06em;margin:0 0 12px;color:var(--ink-2);display:flex;align-items:center;gap:8px;}
+.card h3::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--lane);flex:none}
+
+.target{font-size:14px;color:#4a5a60;margin-bottom:10px;line-height:1.5}
+.target b{color:var(--ink)}
+
+.row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.row label{font-size:12px;color:#6b7a80;min-width:70px;flex:none;font-family:'IBM Plex Mono',monospace}
+.row input, .row textarea{
+  flex:1;border:1px solid rgba(16,36,46,0.15);border-radius:7px;padding:8px 10px;
+  font-family:'IBM Plex Mono',monospace;font-size:16px;background:#fff;color:var(--ink);
+}
+.row input:focus, .row textarea:focus{outline:none;border-color:var(--lane)}
+
+.splitgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;margin-bottom:10px}
+.splitgrid .s{display:flex;flex-direction:column;gap:3px}
+.splitgrid .s span{font-size:10px;color:#8a97a0;font-family:'IBM Plex Mono',monospace}
+.splitgrid .s input{border:1px solid rgba(16,36,46,0.15);border-radius:6px;padding:7px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:16px;background:#fff;color:var(--ink);width:100%;}
+
+.exrow{border-top:1px solid var(--paper-dim);padding-top:10px;margin-top:10px}
+.exrow:first-of-type{border-top:none;padding-top:0;margin-top:0}
+.exname{font-size:13px;font-weight:600;margin-bottom:6px}
+.setgrid{display:flex;gap:6px;flex-wrap:wrap}
+.setgrid .setcell{display:flex;flex-direction:column;gap:3px}
+.setgrid .setcell span{font-size:10px;color:#8a97a0;font-family:'IBM Plex Mono',monospace}
+.setgrid .setcell input{width:66px;border:1px solid rgba(16,36,46,0.15);border-radius:6px;padding:7px 4px;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:16px;background:#fff;color:var(--ink);}
+
+.rpewrap{display:flex;align-items:center;gap:10px}
+.rpewrap input[type=range]{flex:1;accent-color:var(--signal)}
+.rpeval{font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;color:var(--signal);min-width:24px;text-align:right}
+
+textarea{width:100%;min-height:60px;resize:vertical}
+
+.optrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.optrow input[type=checkbox]{width:16px;height:16px;accent-color:var(--lane)}
+.optrow label{font-size:13px;color:#4a5a60}
+
+.savebar{position:sticky;bottom:0;display:flex;gap:10px;padding-top:6px;background:var(--ink);z-index:10}
+.btn{flex:1;border:none;border-radius:10px;padding:14px;font-family:'Oswald',sans-serif;font-weight:600;font-size:14px;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;transition:opacity .15s;}
+.btn.primary{background:var(--signal);color:#fff}
+.btn.primary:hover{opacity:.9}
+.btn.ghost{background:transparent;border:1px solid rgba(246,243,234,0.25);color:var(--paper);flex:none;width:auto;padding:14px 18px}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--lane);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;opacity:0;transition:all .25s;pointer-events:none;font-family:'IBM Plex Sans',sans-serif;z-index:50;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.tabs{display:flex;gap:6px;margin-bottom:18px}
+.tab{flex:1;text-align:center;padding:10px;border-radius:9px;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border:1px solid rgba(246,243,234,0.15);color:var(--muted);}
+.tab.active{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+
+#history{display:none}
+.hist-item{background:var(--paper);color:var(--ink);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.hist-item:hover{outline:2px solid var(--lane)}
+.hist-left .d{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a97a0}
+.hist-left .t{font-family:'Oswald',sans-serif;font-weight:500;font-size:14px;margin-top:2px}
+.hist-right{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--lane);text-align:right}
+.empty{color:var(--muted);font-size:13px;text-align:center;padding:30px 10px}
+</style>
+</head>
+<body>
+
+<div id="authScreen">
+  <div class="authCard">
+    <h2>Авторизация</h2>
+    <p>Подключи свой Google аккаунт для синхронизации тренировок</p>
+    <button class="btn" id="authBtn">Подключить Google</button>
+    <div class="status" id="authStatus"></div>
+  </div>
+</div>
+
+<div class="wrap" id="mainApp" style="display:none">
+  <div class="topbar">
+    <div class="brand">Дневник · <b>50м в/ст</b></div>
+    <div class="datepick">
+      <button id="prevDay" aria-label="Предыдущий день">‹</button>
+      <span id="dateLabel">—</span>
+      <button id="nextDay" aria-label="Следующий день">›</button>
+    </div>
+  </div>
+  <div style="text-align:right;margin-bottom:14px">
+    <button class="todaybtn" id="todayBtn">Сегодня</button>
+  </div>
+
+  <div class="lanebar">
+    <div class="segs" id="laneSegs"></div>
+    <div class="fill" id="laneFill"></div>
+    <div class="marker" id="laneMarker"></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="today">Тренировка</div>
+    <div class="tab" data-tab="history">История</div>
+  </div>
+
+  <div id="today">
+    <div class="headline">
+      <div class="date" id="cycleLabel">—</div>
+      <h1 id="dayTitle">—</h1>
+      <span class="badge" id="dayBadge"></span>
+    </div>
+    <div id="blocks"></div>
+    <div class="card">
+      <h3>Общее</h3>
+      <div class="row"><label>Вес, кг</label><input type="number" step="0.1" id="fWeight" placeholder="напр. 104.2"></div>
+      <div class="row"><label>RPE</label>
+        <div class="rpewrap">
+          <input type="range" min="1" max="10" value="5" id="fRpe">
+          <span class="rpeval" id="fRpeVal">5</span>
+        </div>
+      </div>
+      <div class="row" style="align-items:flex-start"><label style="margin-top:8px">Заметки</label><textarea id="fNotes" placeholder="самочувствие, что удалось/не удалось"></textarea></div>
+    </div>
+    <div class="savebar">
+      <button class="btn primary" id="saveBtn">Сохранить</button>
+    </div>
+  </div>
+
+  <div id="history">
+    <div id="histList"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+(function(){
+
+var CONFIG = {
+  CLIENT_ID: '512551820129-lgsd1ib622tgp44j0m9p9nofs4c2qlfu.apps.googleusercontent.com',
+  SHEET_ID: '1eoHgJMsiuyyrJvjpySVyH2Id1fXYGvEaz94PJgylJCg',
+  SCOPE: 'https://www.googleapis.com/auth/spreadsheets'
+};
+
+var gapi_loaded = false;
+var authenticated = false;
+
+var CYCLE_START = new Date(2026,6,6);
+var DAY_TYPES = ['aero','strength','pace','strength','anaerobic','rest','rest',
+                  'aero','strength','pace','strength','test','rest','rest'];
+var WD = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+var WORKOUTS = {
+  aero: function(d){
+    var main = d===0 ? '6×100м на 1:18-1:19, отдых 15 сек' : '7×100м на 1:17-1:18, отдых 15 сек';
+    var count = d===0 ? 6 : 7;
+    return {
+      title:'CSS / аэробная база', badge:'аэробная',
+      blocks:[
+        {type:'text', label:'Разминка', target:'400м свободно'},
+        {type:'splits', label:'Основная серия', target:main, count:count, unit:'мин:сек'},
+        {type:'text', label:'Заминка', target:'200м легко'}
+      ]
+    };
+  },
+  strength: function(d){
+    var heavier = (d===8 || d===10);
+    var ex = (d===1||d===8) ? [
+        {name:'Тяга верхнего блока', sets:3, reps:10, warmup:1},
+        {name:'Жим ногами', sets:3, reps:12, warmup:1},
+        {name:'Тяга гантели в наклоне (на сторону)', sets:3, reps:10},
+        {name:'Планка, сек', sets:3, reps:(d===1?40:45), isTime:true}
+      ] : [
+        {name:'Приседания', sets:3, reps:10, warmup:1},
+        {name:'Жим гантелей лёжа', sets:3, reps:10, warmup:1},
+        {name:'Отжимания на брусьях / гравитрон', sets:3, reps:'8-10'},
+        {name:'Подтягивания / гравитрон', sets:3, reps:(d===10?'8-10':8)},
+        {name:'Гиперэкстензия', sets:3, reps:12}
+      ];
+    return {
+      title:'Сила (зал)'+(heavier?' · чуть тяжелее прошлой недели':''), badge:'сила',
+      exercises: ex
+    };
+  },
+  pace: function(d){
+    var tempo = d===2 ? '38-39 сек' : '37-38 сек';
+    return {
+      title:'Пейсинг + техника', badge:'пейсинг',
+      blocks:[
+        {type:'text', label:'Разминка', target:'400м свободно'},
+        {type:'splits', label:'4×50м на '+tempo, target:'отдых 30 сек', count:4, unit:'мин:сек'},
+        {type:'text', label:'200м со сдержанным стартом', target:'первые 50м на 37-38 сек, остальное в свою силу'},
+        {type:'text', label:'One-arm drill левой', target:'4×25м с прогрессией скорости'},
+        {type:'opt', label:'Доп. блок (по желанию)', target:'300-500м легко, координация/sculling'}
+      ]
+    };
+  },
+  anaerobic: function(){
+    return {
+      title:'Анаэробная ёмкость', badge:'анаэробная',
+      blocks:[
+        {type:'text', label:'Разминка', target:'400м свободно'},
+        {type:'splits', label:'6×50м на 33-34 сек', target:'отдых 20 сек, контроль 11-12 гребков', count:6, unit:'мин:сек'},
+        {type:'text', label:'Заминка', target:'200м легко'},
+        {type:'opt', label:'Доп. блок (по желанию)', target:'300-500м легко, координация/sculling'}
+      ]
+    };
+  },
+  test: function(){
+    return {
+      title:'Контрольный тест', badge:'тест',
+      blocks:[
+        {type:'text', label:'Разминка', target:'600-700м, как перед стартом'},
+        {type:'splits', label:'ТЕСТ 400м максимально', target:'сплиты по 100м', count:4, unit:'мин:сек'},
+        {type:'text', label:'Заминка', target:'300м легко'}
+      ]
+    };
+  },
+  rest: function(){
+    return { title:'День отдыха', badge:'отдых', blocks:[] };
+  }
+};
+
+function dstr(d){
+  var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+function cycleDayIndex(d){
+  var a = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  var b = new Date(CYCLE_START.getFullYear(), CYCLE_START.getMonth(), CYCLE_START.getDate());
+  var diff = Math.round((a-b)/86400000);
+  var idx = ((diff % 14) + 14) % 14;
+  return {idx:idx, weekNum: Math.floor(diff/7)+1, diff:diff};
+}
+
+function showToast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 1800);
+}
+
+// OAuth flow
+var tokenClient;
+function initAuth(){
+  gapi.load('client', function(){
+    gapi.client.init({
+      discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+    }).then(function(){
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CONFIG.CLIENT_ID,
+        scope: CONFIG.SCOPE,
+        callback: function(resp){
+          if(resp.access_token){
+            authenticated = true;
+            localStorage.setItem('gsheet_token', resp.access_token);
+            gapi.client.setToken({access_token: resp.access_token});
+            showMainApp();
+          }
+        }
+      });
+      // проверяем, есть ли сохранённый токен
+      var savedToken = localStorage.getItem('gsheet_token');
+      if(savedToken){
+        gapi.client.setToken({access_token: savedToken});
+        authenticated = true;
+        showMainApp();
+      }
+    }).catch(function(err){
+      console.error(err);
+      document.getElementById('authStatus').textContent = 'Ошибка инициализации';
+    });
+  });
+}
+
+document.getElementById('authBtn').addEventListener('click', function(){
+  if(tokenClient){
+    tokenClient.requestAccessToken({prompt: 'consent'});
+  }
+});
+
+function showMainApp(){
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = '';
+  buildLane();
+  var current = new Date();
+  renderDay(current);
+}
+
+function buildLane(){
+  var segs = document.getElementById('laneSegs');
+  segs.innerHTML='';
+  for(var i=0;i<14;i++){ var s=document.createElement('div'); s.className='seg'; segs.appendChild(s); }
+}
+
+function updateLane(idx){
+  document.getElementById('laneFill').style.width = ((idx+1)/14*100)+'%';
+  var m = document.getElementById('laneMarker');
+  m.style.left = (idx/14*100)+'%';
+  m.setAttribute('data-day', 'День '+(idx+1)+'/14');
+}
+
+var current = new Date();
+var currentDef = null;
+
+function renderDay(d){
+  current = d;
+  var info = cycleDayIndex(current);
+  var type = DAY_TYPES[info.idx];
+  currentDef = WORKOUTS[type](info.idx);
+
+  document.getElementById('dateLabel').textContent = dstr(current);
+  document.getElementById('cycleLabel').textContent = 'Неделя '+(info.idx<7?1:2)+' цикла · '+WD[current.getDay()];
+  document.getElementById('dayTitle').textContent = currentDef.title;
+  var b = document.getElementById('dayBadge');
+  b.textContent = currentDef.badge;
+  b.className = 'badge '+type;
+  updateLane(info.idx);
+
+  var blocksEl = document.getElementById('blocks');
+  blocksEl.innerHTML = '';
+
+  if(type==='strength'){
+    var card = document.createElement('div'); card.className='card';
+    card.innerHTML = '<h3>Упражнения</h3>';
+    currentDef.exercises.forEach(function(ex, exi){
+      var row = document.createElement('div'); row.className='exrow';
+      var warmHtml = '';
+      if(ex.warmup){
+        warmHtml = '<div class="setgrid" style="margin-bottom:6px"><div class="setcell"><span>разм.</span><input type="text" data-ex="'+exi+'" data-warm="0" placeholder="лёгкий×15" style="border-color:#c9c2b0;background:#f6f3ec"></div></div>';
+      }
+      var setsHtml = '';
+      for(var i=0;i<ex.sets;i++){
+        setsHtml += '<div class="setcell"><span>подх.'+(i+1)+'</span><input type="text" data-ex="'+exi+'" data-set="'+i+'" placeholder="'+(ex.isTime? ex.reps+'с':'кг×'+ex.reps)+'"></div>';
+      }
+      row.innerHTML = '<div class="exname">'+ex.name+' <span style="color:#8a97a0;font-weight:400">('+(ex.warmup?'разминка + ':'')+ex.sets+'×'+ex.reps+(ex.isTime?' сек':'')+')</span></div>'+warmHtml+'<div class="setgrid">'+setsHtml+'</div>';
+      card.appendChild(row);
+    });
+    blocksEl.appendChild(card);
+  } else if(type!=='rest'){
+    currentDef.blocks.forEach(function(bl, bi){
+      var card = document.createElement('div'); card.className='card';
+      var html = '<h3>'+bl.label+'</h3><div class="target"><b>Цель:</b> '+bl.target+'</div>';
+      if(bl.type==='splits'){
+        var grid = '<div class="splitgrid">';
+        for(var i=0;i<bl.count;i++){
+          grid += '<div class="s"><span>#'+(i+1)+'</span><input type="text" data-block="'+bi+'" data-rep="'+i+'" placeholder="'+bl.unit+'"></div>';
+        }
+        grid += '</div>';
+        html += grid;
+      } else if(bl.type==='text'){
+        html += '<div class="row"><label>Факт</label><input type="text" data-block="'+bi+'" placeholder="как получилось"></div>';
+      } else if(bl.type==='opt'){
+        html += '<div class="optrow"><input type="checkbox" id="opt-'+bi+'" data-block="'+bi+'" data-opt="1"><label for="opt-'+bi+'">Сделал(а) доп. блок</label></div>';
+      }
+      card.innerHTML = html;
+      blocksEl.appendChild(card);
+    });
+  } else {
+    var card = document.createElement('div'); card.className='card';
+    card.innerHTML = '<h3>Отдых</h3><div class="target">Тренировки нет. Можно отметить вес и самочувствие ниже.</div>';
+    blocksEl.appendChild(card);
+  }
+
+  loadExisting();
+}
+
+function collectPayload(){
+  var payload = { date: dstr(current), title: currentDef.title, badge: currentDef.badge,
+    weight: document.getElementById('fWeight').value,
+    rpe: document.getElementById('fRpe').value,
+    notes: document.getElementById('fNotes').value,
+    blocks: [], exercises: [] };
+
+  document.querySelectorAll('#blocks input[data-block]').forEach(function(inp){
+    var bi = inp.getAttribute('data-block');
+    if(!payload.blocks[bi]) payload.blocks[bi] = {reps:[]};
+    if(inp.hasAttribute('data-opt')){ payload.blocks[bi].done = inp.checked; }
+    else if(inp.hasAttribute('data-rep')){ payload.blocks[bi].reps[inp.getAttribute('data-rep')] = inp.value; }
+    else { payload.blocks[bi].value = inp.value; }
+  });
+  document.querySelectorAll('#blocks input[data-ex]').forEach(function(inp){
+    var exi = inp.getAttribute('data-ex'), si = inp.getAttribute('data-set');
+    if(!payload.exercises[exi]) payload.exercises[exi] = {name: currentDef.exercises[exi].name, sets:[], warmup:''};
+    if(inp.hasAttribute('data-warm')){ payload.exercises[exi].warmup = inp.value; }
+    else { payload.exercises[exi].sets[si] = inp.value; }
+  });
+  return payload;
+}
+
+function applyPayload(p){
+  if(!p) return;
+  document.getElementById('fWeight').value = p.weight||'';
+  document.getElementById('fRpe').value = p.rpe||5;
+  document.getElementById('fRpeVal').textContent = p.rpe||5;
+  document.getElementById('fNotes').value = p.notes||'';
+  (p.blocks||[]).forEach(function(b, bi){
+    if(!b) return;
+    if(b.done!==undefined){
+      var chk = document.querySelector('[data-block="'+bi+'"][data-opt]');
+      if(chk) chk.checked = b.done;
+    }
+    if(b.value!==undefined){
+      var inp = document.querySelector('input[data-block="'+bi+'"]:not([data-rep]):not([data-opt])');
+      if(inp) inp.value = b.value;
+    }
+    (b.reps||[]).forEach(function(v, ri){
+      var inp = document.querySelector('[data-block="'+bi+'"][data-rep="'+ri+'"]');
+      if(inp) inp.value = v;
+    });
+  });
+  (p.exercises||[]).forEach(function(e, exi){
+    if(!e) return;
+    if(e.warmup){
+      var winp = document.querySelector('[data-ex="'+exi+'"][data-warm="0"]');
+      if(winp) winp.value = e.warmup;
+    }
+    (e.sets||[]).forEach(function(v, si){
+      var inp = document.querySelector('[data-ex="'+exi+'"][data-set="'+si+'"]');
+      if(inp) inp.value = v;
+    });
+  });
+}
+
+async function loadExisting(){
+  if(!authenticated) return;
+  try{
+    var response = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: CONFIG.SHEET_ID,
+      range: 'Sheet1!A:F'
+    });
+    var rows = response.result.values || [];
+    var date = dstr(current);
+    for(var i=1; i<rows.length; i++){
+      if(rows[i] && rows[i][0] === date){
+        var payload = JSON.parse(rows[i][5] || '{}');
+        applyPayload(payload);
+        return;
+      }
+    }
+  }catch(e){ 
+    console.error('Ошибка загрузки:', e); 
+  }
+}
+
+async function saveEntry(){
+  if(!authenticated){
+    showToast('Авторизуйся в Google сначала');
+    return;
+  }
+  var payload = collectPayload();
+  try{
+    // сначала попробуй найти и обновить существующую строку
+    var getResp = await gapi.client.sheets.spreadsheets.values.get({
+      spreadsheetId: CONFIG.SHEET_ID,
+      range: 'Sheet1!A:F'
+    });
+    var rows = getResp.result.values || [];
+    var date = dstr(current);
+    var found = false;
+    
+    for(var i=1; i<rows.length; i++){
+      if(rows[i] && rows[i][0] === date){
+        // обновляем существующую строку
+        await gapi.client.sheets.spreadsheets.values.update({
+          spreadsheetId: CONFIG.SHEET_ID,
+          range: 'Sheet1!A'+(i+1)+':F'+(i+1),
+          valueInputOption: 'USER_ENTERED',
+          values: [[date, payload.title, payload.weight, payload.rpe, payload.notes, JSON.stringify(payload)]]
+        });
+        found = true;
+        break;
+      }
+    }
+    
+    if(!found){
+      // добавляем новую строку
+      await gapi.client.sheets.spreadsheets.values.append({
+        spreadsheetId: CONFIG.SHEET_ID,
+        range: 'Sheet1!A:F',
+        valueInputOption: 'USER_ENTERED',
+        values: [[date, payload.title, payload.weight, payload.rpe, payload.notes, JSON.stringify(payload)]]
+      });
+    }
+    showToast('Сохранено в Google Sheets');
+  }catch(e){ 
+    console.error('Ошибка сохранения:', e);
+    if(e.status === 401){
+      authenticated = false;
+      localStorage.removeItem('gsheet_token');
+      showToast('Сессия истекла, авторизуйся заново');
+      document.getElementById('mainApp').style.display = 'none';
+      document.getElementById('authScreen').style.display = '';
+    } else {
+      showToast('Ошибка сохранения'); 
+    }
+  }
+}
+
+document.getElementById('saveBtn').addEventListener('click', saveEntry);
+document.getElementById('prevDay').addEventListener('click', function(){ current.setDate(current.getDate()-1); renderDay(current); });
+document.getElementById('nextDay').addEventListener('click', function(){ current.setDate(current.getDate()+1); renderDay(current); });
+document.getElementById('todayBtn').addEventListener('click', function(){ renderDay(new Date()); });
+document.getElementById('fRpe').addEventListener('input', function(){ document.getElementById('fRpeVal').textContent = this.value; });
+
+var autosaveTimer = null;
+function scheduleAutosave(){
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(function(){ saveEntry(); }, 600);
+}
+document.addEventListener('input', function(e){
+  if(e.target.closest('#today')) scheduleAutosave();
+});
+document.addEventListener('change', function(e){
+  if(e.target.closest('#today')) scheduleAutosave();
+});
+
+document.querySelectorAll('.tab').forEach(function(tab){
+  tab.addEventListener('click', function(){
+    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+    tab.classList.add('active');
+    var name = tab.getAttribute('data-tab');
+    document.getElementById('today').style.display = name==='today' ? '' : 'none';
+    document.getElementById('history').style.display = name==='history' ? '' : 'none';
+  });
+});
+
+// ждём загрузки Google API
+setTimeout(function(){
+  if(typeof gapi !== 'undefined'){
+    initAuth();
+  } else {
+    console.error('Google API не загружен');
+  }
+}, 500);
+})();
+</script>
+</body>
+</html>
